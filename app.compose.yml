@@ -1,0 +1,30 @@
+version: '3.9'
+
+networks:
+  app_network:
+
+volumes:
+  postgres_data:
+
+services:
+
+  speedtest:
+    image: gkovd/speedtest:latest
+    env_file: .env
+    environment:  
+      - TITLE=LibreSpeed
+      - MODE=frontend
+      - TELEMETRY=true
+      - ENABLE_ID_OBFUSCATION=true
+      - REDACT_IP_ADDRESSES=false
+      - WEBPORT=80
+    networks:
+      - app_network
+
+  database:
+    image: gkovd/postgres:speedtest
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
