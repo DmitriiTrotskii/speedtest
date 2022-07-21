@@ -1,0 +1,78 @@
+name: Build docker image
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  
+  check:
+    outputs:
+      speedtest: ${{ steps.git_diff.outputs.speedtest }}
+      postgres: ${{ steps.git_diff.outputs.postgres }}
+    runs-on: ubuntu-latest
+    
+    steps:    
+      - uses: actions/checkout@v3
+        with: 
+          fetch-depth: 2
+    
+      - name: Changed files list
+        run: |
+          echo "modified files list:  "
+          git diff --name-only HEAD^ HEAD
+    
+      - name: Check changed files
+        id: git_diff
+        run: |
+          git diff --name-only HEAD^ HEAD > diff.txt 
+          while IFS= read -r line; do
+            if [[ $line == Dockerfiles/speedtest.Dockerfile ]]; then
+              echo "::set-output name=speedtest::true"
+            elif [[ $line == Dockerfiles/postgres.Dockerfile ]]; then
+              echo "::set-output name=postgres::true"
+            fi
+          done < diff.txt
+
+  speedtest:
+    needs: check
+    if: needs.check.outputs.speedtest == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWD }}
+      
+      - uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfiles/speedtest.Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/$CONTAINER_NAME_SPEEDTEST:latest
+
+  postgres:
+    needs: check
+    if: needs.check.outputs.postgres == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWD }}
+      
+      - uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./Dockerfiles/postgres.Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/$CONTAINER_NAME_POSTGRES:speedtest
