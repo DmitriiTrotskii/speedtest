@@ -54,7 +54,7 @@ jobs:
           file: ./Dockerfiles/speedtest.Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/$CONTAINER_NAME_SPEEDTEST:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/speedtest:latest
 
   postgres:
     needs: check
@@ -75,4 +75,4 @@ jobs:
           file: ./Dockerfiles/postgres.Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/$CONTAINER_NAME_POSTGRES:speedtest
+            ${{ secrets.DOCKERHUB_USERNAME }}/postgres:speedtest
