@@ -41,5 +41,3 @@ ENV WEBPORT=80
 
 EXPOSE 80
 CMD ["bash", "/entrypoint.sh"]
-
-# workflow test
