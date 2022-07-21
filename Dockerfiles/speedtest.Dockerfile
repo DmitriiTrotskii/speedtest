@@ -1,14 +1,3 @@
-ARG VER=5.2.5
-
-FROM alpine:latest
-
-ARG VER
-ARG URL=https://github.com/librespeed/speedtest/archive/refs/tags/${VER}.tar.gz
-
-ADD ${URL} ./
-
-RUN tar -xzf ${VER}.tar.gz -C ./
-
 FROM php:7.4-apache
 
 RUN apt-get update && apt-get install -y \
@@ -21,23 +10,26 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql pdo_pgsql pgsql
 
-RUN mkdir -p /speedtest/
+ARG VER=5.2.5
+ARG URL=https://github.com/librespeed/speedtest/archive/refs/tags/${VER}.tar.gz
 
-ARG VER
-ARG SRC=/speedtest-${VER}
+ADD ${URL} ./
 
-COPY --from=0 ${SRС}/backend/ /speedtest/backend
-
-COPY --from=0 ${SRС}/results/*.php /speedtest/results/
-COPY --from=0 ${SRС}/results/*.ttf /speedtest/results/
-
-COPY --from=0 ${SRС}/*.js /speedtest/
-COPY --from=0 ${SRС}/favicon.ico /speedtest/
-
-COPY --from=0 ${SRС}/docker/servers.json /servers.json
-
-COPY --from=0 ${SRС}/docker/*.php /speedtest/
-COPY --from=0 ${SRС}/docker/entrypoint.sh /
+RUN tar -xzf ${VER}.tar.gz \
+    speedtest-${VER}/backend/ \
+    --wildcards speedtest-${VER}/results/*.php \
+    --wildcards speedtest-${VER}/results/*.ttf \
+    --wildcards speedtest-${VER}/*.js \
+    speedtest-${VER}/favicon.ico \
+    speedtest-${VER}/docker/servers.json \
+    --wildcards speedtest-${VER}/docker/*.php \
+    speedtest-${VER}/docker/entrypoint.sh && \
+    mv speedtest-${VER}/docker/*.php speedtest-${VER}/ && \
+    mv speedtest-${VER}/docker/entrypoint.sh / && \
+    mv speedtest-${VER}/docker/servers.json speedtest-${VER}/ && \
+    rm -rf speedtest-${VER}/docker && \
+    rm -f ${VER}.tar.gz && \
+    mv speedtest-${VER} /speedtest
 
 ENV TITLE=LibreSpeed
 ENV MODE=standalone
